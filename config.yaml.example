@@ -1,0 +1,5 @@
+channel_secret: ""
+channel_token: ""
+
+firestore:
+  service_account_file: ""

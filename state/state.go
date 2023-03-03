@@ -16,14 +16,14 @@ type UserInfo struct {
 }
 
 type UserState struct {
-	UserID           UserID
+	UserID           string
 	UserInfo         UserInfo
 	BeforeAskCommand command.AskCommand
 	BeforeReplay     string
 	IsRegistered     bool
 }
 
-func (us *UserState) UpdateBeforeAsk(userID UserID, askCommand command.AskCommand) {
+func (us *UserState) UpdateBeforeAsk(userID string, askCommand command.AskCommand) {
 	us.BeforeAskCommand = askCommand
 }
 
@@ -62,16 +62,16 @@ func (us *UserState) ResetUserState() {
 }
 
 type UserStates struct {
-	Data map[UserID]*UserState
+	Data map[string]*UserState
 }
 
 func NewUserStates() UserStates {
 	return UserStates{
-		Data: make(map[UserID]*UserState),
+		Data: make(map[string]*UserState),
 	}
 }
 
-func (us UserStates) CreateUserStateIfNotExist(userID UserID) *UserState {
+func (us UserStates) CreateUserStateIfNotExist(userID string) *UserState {
 	if _, ok := us.Data[userID]; !ok {
 		us.Data[userID] = &UserState{
 			UserID: userID,

@@ -162,7 +162,7 @@ func MemberInfoMessage(name string, phone string, region string, birthday string
 				},
 				{
 				  "type": "image",
-				  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/linecorp_code_withborder.png",
+				  "url": "%s",
 				  "size": "xl",
 				  "aspectMode": "cover"
 				},
@@ -180,7 +180,7 @@ func MemberInfoMessage(name string, phone string, region string, birthday string
 			}
 		  ]
 		}
-	  }`, name, phone, region, birthday, cartype))
+	  }`, name, phone, region, birthday, cartype, url))
 
 	container, err := linebot.UnmarshalFlexMessageJSON(messageTemplate)
 	if err != nil {

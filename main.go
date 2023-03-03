@@ -11,8 +11,7 @@ import (
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		fmt.Println(err)
-		panic("load config failed")
+		panic(err)
 	}
 
 	linebot_controller, err := controller.NewLineBotController(
@@ -20,7 +19,7 @@ func main() {
 		cfg.ChannelToken,
 	)
 	if err != nil {
-		panic("create linbot controller failed")
+		panic(err)
 	}
 
 	router := gin.Default()

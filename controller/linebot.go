@@ -86,9 +86,14 @@ func (ctr *LineBotController) RewardPoints(c *gin.Context) {
 		return
 	}
 
+	if err := ctr.Firestore.AddPoints(request.UserID, request.Points); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	_, err := ctr.Bot.PushMessage(request.UserID, msg.RewardPointsMessage(request.Points)).Do()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	c.Status(http.StatusOK)
 }

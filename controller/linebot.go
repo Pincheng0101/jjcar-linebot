@@ -212,8 +212,7 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 			// Todo: replay create user failed message
 			return
 		} else {
-			user := firestore.User{
-				UserID:   userID,
+			userInfo := firestore.UserInfo{
 				Name:     userState.UserInfo.Name,
 				Phone:    userState.UserInfo.Phone,
 				Region:   userState.UserInfo.Region,
@@ -221,7 +220,7 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 				CarType:  userState.UserInfo.CarType,
 				Points:   0,
 			}
-			if err := ctr.Firestore.AddUser(user); err != nil {
+			if err := ctr.Firestore.AddUser(userID, userInfo); err != nil {
 				fmt.Println(err)
 				if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.BaseMessage("新增使用者失敗")).Do(); err != nil {
 					return

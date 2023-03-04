@@ -9,8 +9,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-type User struct {
-	UserID   string `firestore:"user_id"`
+type UserInfo struct {
 	Name     string `firestore:"name"`
 	Phone    string `firestore:"phone"`
 	Region   string `firestore:"region"`
@@ -40,23 +39,23 @@ func NewFirestore() (*Firestore, error) {
 	return &Firestore{client, ctx}, nil
 }
 
-func (f *Firestore) AddUser(user User) error {
-	_, err := f.client.Collection("users").Doc(user.UserID).Set(f.ctx, user)
+func (f *Firestore) AddUser(userID string, user UserInfo) error {
+	_, err := f.client.Collection("users").Doc(userID).Set(f.ctx, user)
 	return err
 }
 
-func (f *Firestore) GetUser(userId string) (*User, error) {
-	doc, err := f.client.Collection("users").Doc(userId).Get(f.ctx)
+func (f *Firestore) GetUser(userID string) (*UserInfo, error) {
+	doc, err := f.client.Collection("users").Doc(userID).Get(f.ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var user User
-	if err := doc.DataTo(&user); err != nil {
+	var userInfo UserInfo
+	if err := doc.DataTo(&userInfo); err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return &userInfo, nil
 }
 
 func (f *Firestore) UpdateUser(userID string, userUpdates map[string]interface{}) error {

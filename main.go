@@ -23,9 +23,10 @@ func main() {
 	}
 
 	router := gin.Default()
-	router.POST("/callback", linebot_controller.Callback)
-	router.GET("/quota", linebot_controller.Quota)
 	router.StaticFile("/qrcode", "./qrcode.html")
+	router.POST("/callback", linebot_controller.Callback)
+	router.POST("/points/reward", linebot_controller.RewardPoints)
+	router.GET("/quota", linebot_controller.Quota)
 
 	if err := router.Run(":8080"); err != nil {
 		fmt.Println(err)

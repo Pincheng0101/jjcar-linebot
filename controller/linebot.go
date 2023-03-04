@@ -67,6 +67,25 @@ func (ctr *LineBotController) Quota(c *gin.Context) {
 	})
 }
 
+type rewardPointsRequest struct {
+	UserID string `json:"user_id"`
+	Points int    `json:"points"`
+}
+
+func (ctr *LineBotController) RewardPoints(c *gin.Context) {
+	var request rewardPointsRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err := ctr.Bot.PushMessage(request.UserID, msg.RewardPointsMessage(request.Points)).Do()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.Status(http.StatusOK)
+}
+
 func (ctr *LineBotController) Callback(c *gin.Context) {
 	events, err := ctr.Bot.ParseRequest(c.Request)
 	if err != nil {

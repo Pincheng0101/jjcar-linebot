@@ -108,12 +108,12 @@
       function sendPoints(points, user_id) {
         // Send POST request to /points with payload
         var payload = {
-          points: points,
+          points: parseInt(points),
           user_id: user_id,
         };
         $.ajax({
           type: 'POST',
-          url: '/points',
+          url: '/points/reward',
           data: JSON.stringify(payload),
           contentType: 'application/json',
           success: function (response) {

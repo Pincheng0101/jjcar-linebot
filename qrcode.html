@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <title>QR Code Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.6.3.min.js"
+      integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      #app {
+        height: 100%;
+        width: 100%;
+        margin: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 120%;
+        flex-wrap: wrap;
+      }
+
+      #qr-reader,
+      #qr-reader-results,
+      #points-form {
+        margin: auto;
+      }
+
+      #html5-qrcode-button-camera-permission {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      #html5-qrcode-button-camera-permission:hover {
+        background-color: #0069d9;
+      }
+    </style>
+
+    <body>
+      <div id="app">
+        <div id="qr-reader" style="width: 500px"></div>
+        <div id="qr-reader-results" style="display: none"></div>
+        <form id="points-form" style="display: none">
+          <label for="points-input">輸入數值：</label>
+          <input id="points-input" type="number" min="0" required />
+          <button type="submit">發送</button>
+        </form>
+      </div>
+    </body>
+    <script>
+      function docReady(fn) {
+        // see if DOM is already available
+        if (
+          document.readyState === 'complete' ||
+          document.readyState === 'interactive'
+        ) {
+          // call on next available tick
+          setTimeout(fn, 1);
+        } else {
+          document.addEventListener('DOMContentLoaded', fn);
+        }
+      }
+
+      docReady(function () {
+        var resultContainer = document.getElementById('qr-reader-results');
+        var lastResult,
+          countResults = 0;
+        function onScanSuccess(decodedText, decodedResult) {
+          if (decodedText !== lastResult) {
+            ++countResults;
+            lastResult = decodedText;
+            // Handle on success condition with the decoded message.
+            console.log(`Scan result ${decodedText}`, decodedResult);
+
+            // Show the scanned result
+            resultContainer.innerHTML = `Scanned QR Code: ${decodedText}`;
+
+            // Hide the scanner
+            document.getElementById('qr-reader').style.display = 'none';
+
+            // Show the form to enter points
+            resultContainer.style.display = 'block';
+            document.querySelector('#points-form').style.display = 'block';
+
+            // Add event listener for form submit
+            $('#points-form').submit(function (event) {
+              event.preventDefault();
+              var points = $('#points-input').val();
+              sendPoints(points, decodedText);
+            });
+          }
+        }
+
+        var html5QrcodeScanner = new Html5QrcodeScanner('qr-reader', {
+          fps: 10,
+          qrbox: 250,
+        });
+        html5QrcodeScanner.render(onScanSuccess);
+      });
+
+      function sendPoints(points, user_id) {
+        // Send POST request to /points with payload
+        var payload = {
+          points: points,
+          user_id: user_id,
+        };
+        $.ajax({
+          type: 'POST',
+          url: '/points',
+          data: JSON.stringify(payload),
+          contentType: 'application/json',
+          success: function (response) {
+            alert('Points added successfully');
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            alert('Error adding points: ' + errorThrown);
+          },
+        });
+      }
+    </script>
+  </head>
+</html>

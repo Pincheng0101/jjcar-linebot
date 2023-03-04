@@ -8,6 +8,7 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/pincheng0101/go-linebot-server-template/command"
 	"github.com/pincheng0101/go-linebot-server-template/config"
+	"github.com/pincheng0101/go-linebot-server-template/firestore"
 	msg "github.com/pincheng0101/go-linebot-server-template/message"
 	"github.com/pincheng0101/go-linebot-server-template/state"
 	"github.com/pincheng0101/go-linebot-server-template/storage"
@@ -22,6 +23,7 @@ type LineBotController struct {
 	Bot        *linebot.Client
 	UserStates state.UserStates
 	Storage    *storage.Storage
+	Firestore  *firestore.Firestore
 	Firebase   Firebase
 }
 
@@ -30,16 +32,21 @@ func NewLineBotController(channelSecret, channelAccessToken string) (*LineBotCon
 
 	bot, err := linebot.New(channelSecret, channelAccessToken)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	storage, err := storage.NewStorage()
 	if err != nil {
-		return nil, err
+		panic(err)
+	}
+	firestore, err := firestore.NewFirestore()
+	if err != nil {
+		panic(err)
 	}
 	return &LineBotController{
 		Bot:        bot,
 		UserStates: state.NewUserStates(),
 		Storage:    storage,
+		Firestore:  firestore,
 		Firebase: Firebase{
 			ServiceAccountFile: cfg.Firebase.ServiceAccountFile,
 			StorageBucket:      cfg.Firebase.StorageBucket,
@@ -116,7 +123,25 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 	userID := event.Source.UserID
 	text := message
 	qrcodeImageUrl := generateQRCodeImageUrl(ctr.Firebase.StorageBucket, userID)
-	userState := ctr.UserStates.CreateUserStateIfNotExist(userID)
+
+	var userState *state.UserState
+	if !ctr.UserStates.UserExists(userID) {
+		user, _ := ctr.Firestore.GetUser(userID)
+		userInfo := state.UserInfo{
+			Name:     user.Name,
+			Phone:    user.Phone,
+			Region:   user.Region,
+			Birthday: user.Birthday,
+			CarType:  user.CarType,
+			Point:    uint(user.Points),
+		}
+		if user != nil {
+			userState = ctr.UserStates.CreateUserStateByUser(userID, userInfo)
+		}
+	} else {
+		userState = ctr.UserStates.CreateUserStateIfNotExist(userID)
+	}
+
 	if text == "會員資料" {
 		if userState.IsRegistered {
 			if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.MemberInfoMessage(
@@ -183,9 +208,25 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 		userState.ResetUserState()
 
 		if err := ctr.Storage.UploadQrcode(userID); err != nil {
+			fmt.Println(err)
 			// Todo: replay create user failed message
 			return
 		} else {
+			user := firestore.User{
+				UserID:   userID,
+				Name:     userState.UserInfo.Name,
+				Phone:    userState.UserInfo.Phone,
+				Region:   userState.UserInfo.Region,
+				Birthday: userState.UserInfo.Birthday,
+				CarType:  userState.UserInfo.CarType,
+				Points:   0,
+			}
+			if err := ctr.Firestore.AddUser(user); err != nil {
+				fmt.Println(err)
+				if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.BaseMessage("新增使用者失敗")).Do(); err != nil {
+					return
+				}
+			}
 			if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.MemberInfoMessage(
 				userState.UserInfo.Name,
 				userState.UserInfo.Phone,

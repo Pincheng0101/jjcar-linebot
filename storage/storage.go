@@ -48,13 +48,22 @@ func NewStorage() (*Storage, error) {
 }
 
 func (s *Storage) UploadQrcode(userID string) error {
+	object := s.bucket.Object(userID + ".png")
+	attrs, err := object.Attrs(s.ctx)
+
+	if err != nil {
+		return fmt.Errorf("Error checking object attributes: %v", err)
+	}
+
+	// If the file already exists, return success
+	if attrs != nil {
+		return nil
+	}
+
 	qrcodeBytes, err := qrcode.Encode(userID, qrcode.Medium, 256)
 	if err != nil {
 		return fmt.Errorf("Error generating QR code: %v", err)
 	}
-
-	object := s.bucket.Object(userID + ".png")
-	object = object.If(storage.Conditions{DoesNotExist: true})
 
 	writer := object.NewWriter(s.ctx)
 	if _, err = io.Copy(writer, bytes.NewReader(qrcodeBytes)); err != nil {

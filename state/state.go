@@ -71,6 +71,16 @@ func NewUserStates() UserStates {
 	}
 }
 
+func (us UserStates) CreateUserStateByUser(userID string, userInfo UserInfo) *UserState {
+	userState := UserState{
+		UserID:       userID,
+		UserInfo:     userInfo,
+		IsRegistered: true,
+	}
+	us.Data[userID] = &userState
+	return us.Data[userID]
+}
+
 func (us UserStates) CreateUserStateIfNotExist(userID string) *UserState {
 	if _, ok := us.Data[userID]; !ok {
 		us.Data[userID] = &UserState{
@@ -78,4 +88,11 @@ func (us UserStates) CreateUserStateIfNotExist(userID string) *UserState {
 		}
 	}
 	return us.Data[userID]
+}
+
+func (us UserStates) UserExists(userID string) bool {
+	if _, ok := us.Data[userID]; !ok {
+		return false
+	}
+	return true
 }

@@ -1,5 +1,6 @@
 channel_secret: ""
 channel_token: ""
 
-firestore:
+firebase:
   service_account_file: ""
+  storage_bucket: ""

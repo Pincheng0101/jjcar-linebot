@@ -6,7 +6,7 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-func BalanceMessage(balance int) (*linebot.FlexMessage, error) {
+func BalanceMessage(balance int) *linebot.FlexMessage {
 	container := &linebot.BubbleContainer{
 		Type: linebot.FlexContainerTypeBubble,
 		Body: &linebot.BoxComponent{
@@ -23,5 +23,5 @@ func BalanceMessage(balance int) (*linebot.FlexMessage, error) {
 
 	balanceMessage := linebot.NewFlexMessage("點數查詢", container)
 
-	return balanceMessage, nil
+	return balanceMessage
 }

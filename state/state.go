@@ -12,7 +12,7 @@ type UserInfo struct {
 	Region   string
 	Birthday string
 	CarType  string
-	Point    uint
+	Points   int
 }
 
 type UserState struct {
@@ -51,6 +51,10 @@ func (us *UserState) UpdateCarType(cartype string) {
 	us.UserInfo.CarType = cartype
 }
 
+func (us *UserState) AddPoints(points int) {
+	us.UserInfo.Points += points
+}
+
 func (us *UserState) Registered() {
 	us.IsRegistered = true
 }
@@ -68,6 +72,14 @@ type UserStates struct {
 func NewUserStates() UserStates {
 	return UserStates{
 		Data: make(map[string]*UserState),
+	}
+}
+
+func (us UserStates) GetUserState(userID string) *UserState {
+	if userState, ok := us.Data[userID]; !ok {
+		return nil
+	} else {
+		return userState
 	}
 }
 

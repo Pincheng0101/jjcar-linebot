@@ -90,6 +90,11 @@ func (ctr *LineBotController) RewardPoints(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if userState := ctr.UserStates.GetUserState(request.UserID); userState == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+	} else {
+		userState.AddPoints(request.Points)
+	}
 
 	_, err := ctr.Bot.PushMessage(request.UserID, msg.RewardPointsMessage(request.Points)).Do()
 	if err != nil {
@@ -138,7 +143,7 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 			Region:   user.Region,
 			Birthday: user.Birthday,
 			CarType:  user.CarType,
-			Point:    uint(user.Points),
+			Points:   user.Points,
 		}
 		if user != nil {
 			userState = ctr.UserStates.CreateUserStateByUser(userID, userInfo)
@@ -161,6 +166,10 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 		}
 		userState.UpdateBeforeAsk(userID, command.RegistryAskCommand)
 		if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.RegistryMessage()).Do(); err != nil {
+			return
+		}
+	} else if text == "點數查詢" {
+		if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.BalanceMessage(userState.UserInfo.Points)).Do(); err != nil {
 			return
 		}
 	}
@@ -226,7 +235,6 @@ func (ctr *LineBotController) handleTextMessageEvent(event *linebot.Event, messa
 				Points:   0,
 			}
 			if err := ctr.Firestore.AddUser(userID, userInfo); err != nil {
-				fmt.Println(err)
 				if _, err := ctr.Bot.ReplyMessage(event.ReplyToken, msg.BaseMessage("新增使用者失敗")).Do(); err != nil {
 					return
 				}

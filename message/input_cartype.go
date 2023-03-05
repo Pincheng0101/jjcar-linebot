@@ -5,81 +5,56 @@ import (
 )
 
 func InputCarTypeMessage() *linebot.FlexMessage {
-	messageTemplate := []byte(`
-	{
-		"type": "bubble",
-		"direction": "ltr",
-		"header": {
-		  "type": "box",
-		  "layout": "vertical",
-		  "contents": [
-			{
-			  "type": "text",
-			  "text": "請選擇車型/等級",
-			  "weight": "bold",
-			  "size": "lg",
-			  "align": "center",
-			  "contents": []
-			}
-		  ]
-		},
-		"footer": {
-		  "type": "box",
-		  "layout": "horizontal",
-		  "contents": [
-			{
-			  "type": "box",
-			  "layout": "vertical",
-			  "contents": [
-				{
-				  "type": "box",
-				  "layout": "vertical",
-				  "flex": 1,
-				  "contents": [
-					{
-					  "type": "button",
-					  "action": {
-						"type": "message",
-						"label": "手排(二人座)",
-						"text": "手排(二人座)"
-					  }
-					},
-					{
-					  "type": "button",
-					  "action": {
-						"type": "message",
-						"label": "手排(五人座)",
-						"text": "手排(五人座)"
-					  }
-					},
-					{
-					  "type": "button",
-					  "action": {
-						"type": "message",
-						"label": "自排(五人座)",
-						"text": "自排(五人座)"
-					  }
-					},
-					{
-					  "type": "button",
-					  "action": {
-						"type": "message",
-						"label": "自排(五人座)TSS",
-						"text": "自排(五人座)TSS"
-					  }
-					}
-				  ]
-				}
-			  ]
-			}
-		  ]
-		}
-	  }`)
+	title := "請選擇車型/等級"
+	carTypes := []string{"手排(二人座)", "手排(五人座)", "自排(五人座)", "自排(五人座)TSS"}
 
-	container, err := linebot.UnmarshalFlexMessageJSON(messageTemplate)
-	if err != nil {
-		return nil
+	headerText := &linebot.TextComponent{
+		Type:   linebot.FlexComponentTypeText,
+		Text:   title,
+		Weight: linebot.FlexTextWeightTypeBold,
+		Size:   linebot.FlexTextSizeTypeLg,
+		Align:  linebot.FlexComponentAlignTypeCenter,
 	}
+
+	header := &linebot.BoxComponent{
+		Type:   linebot.FlexComponentTypeBox,
+		Layout: linebot.FlexBoxLayoutTypeVertical,
+		Contents: []linebot.FlexComponent{
+			headerText,
+		},
+	}
+
+	buttonGroup := &linebot.BoxComponent{
+		Type:   linebot.FlexComponentTypeBox,
+		Layout: linebot.FlexBoxLayoutTypeVertical,
+		Flex:   linebot.IntPtr(1),
+		Contents: func() []linebot.FlexComponent {
+			buttons := make([]linebot.FlexComponent, 0)
+			for _, carType := range carTypes {
+				button := &linebot.ButtonComponent{
+					Type:   linebot.FlexComponentTypeButton,
+					Action: linebot.NewMessageAction(carType, carType),
+					Flex:   linebot.IntPtr(1),
+				}
+				buttons = append(buttons, button)
+			}
+			return buttons
+		}(),
+	}
+
+	footer := &linebot.BoxComponent{
+		Type:     linebot.FlexComponentTypeBox,
+		Layout:   linebot.FlexBoxLayoutTypeHorizontal,
+		Contents: []linebot.FlexComponent{buttonGroup},
+	}
+
+	container := &linebot.BubbleContainer{
+		Type:      linebot.FlexContainerTypeBubble,
+		Direction: linebot.FlexBubbleDirectionTypeLTR,
+		Header:    header,
+		Footer:    footer,
+	}
+
 	message := linebot.NewFlexMessage("input_cartype", container)
 
 	return message
